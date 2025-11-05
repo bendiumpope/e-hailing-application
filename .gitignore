@@ -6,7 +6,7 @@
 # Build outputs
 **/dist
 **/build
-/.next/
+**/.next/
 /out/
 
 # Logs

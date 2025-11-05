@@ -15,10 +15,10 @@ const SignupPage = () => {
     try {
       const response = await api.post('auth/signup', { email, password, name });
       console.log("response", response);
-      if (response.statusCode === 409) {
-        setError('User with this email already exists');
-        return;
-      }
+      // if (response.statusCode === 409) {
+      //   setError('User with this email already exists');
+      //   return;
+      // }
       router.push('/login');
     } catch (error: any) {
       if (error.response && error.response.data && error.response.data.message) {
