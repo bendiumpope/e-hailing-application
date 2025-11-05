@@ -13,6 +13,8 @@ const Header = () => {
 
   const handleLogout = () => {
     dispatch(logout());
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
     router.push('/login');
   };
 

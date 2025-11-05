@@ -15,9 +15,14 @@ const LoginPage = () => {
     e.preventDefault();
     try {
       const { access_token } = await api.post('auth/login', { email, password });
-      // In a real app, you'd fetch the user profile here
-      dispatch(setCredentials({ user: { email }, token: access_token }));
-      router.push('/profile');
+      if (access_token) {
+        localStorage.setItem('token', access_token);
+        localStorage.setItem('user', JSON.stringify({ email }));
+        dispatch(setCredentials({ user: { email }, token: access_token }));
+        router.push('/profile');
+      } else {
+        setError('Login failed');
+      }
     } catch (error) {
       console.error('Failed to login', error);
     }

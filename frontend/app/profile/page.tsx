@@ -1,21 +1,24 @@
 'use client';
-import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { RootState } from '@/store';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
-const ProfilePage = () => {
-  const { user, token } = useSelector((state: RootState) => state.auth);
+export default function ProfilePage() {
+  const { user, isLoading } = useSelector((state: any) => state.auth);
   const router = useRouter();
 
   useEffect(() => {
-    if (!token) {
+    if (!isLoading && !user) {
       router.push('/login');
     }
-  }, [token, router]);
+  }, [user, isLoading, router]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   if (!user) {
-    return <div>Loading...</div>;
+    return null; // or a redirect, but useEffect handles it
   }
 
   return (
@@ -24,6 +27,4 @@ const ProfilePage = () => {
       <p>Email: {user.email}</p>
     </div>
   );
-};
-
-export default ProfilePage;
+}

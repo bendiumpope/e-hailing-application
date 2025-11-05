@@ -19,7 +19,7 @@ import { User } from './users/entities/user.entity';
         password: configService.get<string>('DATABASE_PASSWORD'),
         database: configService.get<string>('DATABASE_DB'),
         entities: [User],
-        synchronize: true, // Auto-create database schema. Set to false in production.
+        synchronize: true,
       }),
     }),
     AuthModule,
