@@ -30,13 +30,34 @@ export default function RideRequestForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("pickup ", pickup)
+    console.log("destination ", destination)
     if (!pickup || !destination) {
       setError('Please select both pickup and destination.');
       return;
     }
+  
     setError('');
-    console.log('handlePickupSelect:', handlePickupSelect);
+  
+    console.log('✅ Pickup Selected:', pickup);
+    console.log('✅ Destination Selected:', destination);
+  
+    // Example: send to backend or calculate route
+    const rideData = {
+      pickupAddress: pickup.address,
+      pickupCoords: pickup.latLng,
+      destinationAddress: destination.address,
+      destinationCoords: destination.latLng,
+    };
+  
+    console.log('📦 Ride Data Ready To Send:', rideData);
+  
+    // Example API call
+    // post('/api/rides', rideData)
+    //   .then(response => console.log('🚀 Ride requested successfully', response))
+    //   .catch(err => console.error('❌ Failed to request ride:', err));
   };
+  
 
   return (
     <div style={{

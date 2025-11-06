@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useRef } from 'react';
 
-// Define the custom element for TypeScript
 declare global {
   namespace JSX {
     interface IntrinsicElements {
@@ -20,45 +19,57 @@ export default function LocationAutocomplete({
   const autocompleteRef = useRef<any>(null);
 
   useEffect(() => {
-    const element = autocompleteRef.current;
-    if (!element) return;
+    const el = autocompleteRef.current;
+    if (!el) return;
 
-    const handlePlaceChange = (event?: any) => {
-      // Prefer event detail (new API), fallback to element.value (legacy)
-      const place = event?.detail?.place ?? element.value;
+    // ✅ Event fires when user selects a place
+    const handleSelect = async (event: any) => {
+      console.log('🚀 gmp-placeselect event fired', event);
+      const placePrediction = event?.placePrediction;
+      const place = placePrediction?.toPlace?.();
+      
+      if (!place) return;
+      
+      try {
+        await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'location'] });
 
-      // New Places (Web Component): place.location is LatLngLiteral
-      let lat: number | undefined;
-      let lng: number | undefined;
+        const location = place.location;
+        if (!location) return;
 
-      if (place?.location && typeof place.location.lat === 'number') {
-        lat = place.location.lat;
-        lng = place.location.lng;
-      } else if (place?.geometry?.location) {
-        // Legacy Places: geometry.location has lat()/lng() methods
-        lat = place.geometry.location.lat?.();
-        lng = place.geometry.location.lng?.();
-      }
+        const lat = typeof location.lat === 'function' ? location.lat() : location.lat;
+        const lng = typeof location.lng === 'function' ? location.lng() : location.lng;
+        const address = place.formattedAddress || place.displayName || '';
 
-      if (typeof lat === 'number' && typeof lng === 'number') {
-        const address = place?.formattedAddress || place?.formatted_address || '';
+        console.log('📍 Selected place:', { address, lat, lng });
         onSelect(address, { lat, lng });
+      } catch (err) {
+        console.error('❌ Failed to fetch fields', err);
       }
     };
 
-    element.addEventListener('gmp-placechange', handlePlaceChange);
-    return () => {
-      element.removeEventListener('gmp-placechange', handlePlaceChange);
-    };
+    el.addEventListener('gmp-select', handleSelect);
+    // Attach correct event listener
+    el.addEventListener('gmp-placeselect', handleSelect);
+
+    return () => el.removeEventListener('gmp-placeselect', handleSelect);
   }, [onSelect]);
 
   return (
-    <gmp-place-autocomplete
-      ref={autocompleteRef}
-      placeholder={placeholder}
-      style={{ width: '100%' }}
-    >
-      <input slot="input" placeholder={placeholder} />
+    <gmp-place-autocomplete ref={autocompleteRef} style={{ width: '100%' }}>
+      <input
+        slot="input"
+        placeholder={placeholder}
+        style={{
+          width: '100%',
+          padding: '0.75rem',
+          borderRadius: '8px',
+          border: '1px solid #ccc',
+          boxSizing: 'border-box',
+          backgroundColor: '#fff',
+          color: '#000',
+          fontSize: '14px',
+        }}
+      />
     </gmp-place-autocomplete>
   );
 }

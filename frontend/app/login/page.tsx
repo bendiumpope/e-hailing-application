@@ -18,8 +18,8 @@ const LoginPage = () => {
       if (access_token) {
         localStorage.setItem('token', access_token);
         localStorage.setItem('user', JSON.stringify({ email }));
-        dispatch(setCredentials({ user: { email }, token: access_token }));
-        router.push('/profile');
+      dispatch(setCredentials({ user: { email }, token: access_token }));
+      router.push('/profile');
       } else {
         setError('Login failed');
       }

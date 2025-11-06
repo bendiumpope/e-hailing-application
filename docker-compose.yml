@@ -29,7 +29,7 @@ services:
       - postgres
       - redis
     ports:
-      - '3001:3000'
+      - '3002:3000'
     environment:
       DATABASE_HOST: postgres
       DATABASE_PORT: 5432

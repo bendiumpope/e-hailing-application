@@ -1,6 +1,7 @@
 'use client';
-import { useEffect, useRef } from 'react';
-import { getGoogle } from '../utils/googleMapsLoader';
+
+import { useEffect, useState } from 'react';
+import { Map, AdvancedMarker, Pin } from '@vis.gl/react-google-maps';
 
 export default function MapComponent({
   pickup,
@@ -9,62 +10,69 @@ export default function MapComponent({
   pickup: { lat: number; lng: number } | null;
   destination: { lat: number; lng: number } | null;
 }) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<google.maps.Map>();
-  const pickupMarker = useRef<google.maps.Marker>();
-  const destMarker = useRef<google.maps.Marker>();
+  const [mapCenter, setMapCenter] = useState({ lat: 53.3498, lng: -6.2603 });
+  const [zoom, setZoom] = useState(12);
 
   useEffect(() => {
-    const initMap = async () => {
-      const google = await getGoogle();
-      mapInstance.current = new google.maps.Map(mapRef.current as HTMLElement, {
-        center: { lat: 53.3498, lng: -6.2603 },
-        zoom: 12,
-      });
-    };
-    initMap();
-  }, []);
-
-  useEffect(() => {
-    if (!mapInstance.current) return;
-    const google = window.google;
-
-    if (pickup) {
-      if (!pickupMarker.current) {
-        pickupMarker.current = new google.maps.Marker({
-          position: pickup,
-          map: mapInstance.current,
-          label: 'A',
-        });
-      } else {
-        pickupMarker.current.setPosition(pickup);
-      }
-    }
-
-    if (destination) {
-      if (!destMarker.current) {
-        destMarker.current = new google.maps.Marker({
-          position: destination,
-          map: mapInstance.current,
-          label: 'B',
-        });
-      } else {
-        destMarker.current.setPosition(destination);
-      }
-    }
-
+    // Auto-fit map to show both markers when both are selected
     if (pickup && destination) {
-      const bounds = new google.maps.LatLngBounds();
-      bounds.extend(pickup);
-      bounds.extend(destination);
-      mapInstance.current.fitBounds(bounds);
+      // Calculate center point between pickup and destination
+      const centerLat = (pickup.lat + destination.lat) / 2;
+      const centerLng = (pickup.lng + destination.lng) / 2;
+      setMapCenter({ lat: centerLat, lng: centerLng });
+      
+      // Calculate appropriate zoom level based on distance
+      const latDiff = Math.abs(pickup.lat - destination.lat);
+      const lngDiff = Math.abs(pickup.lng - destination.lng);
+      const maxDiff = Math.max(latDiff, lngDiff);
+      
+      // Adjust zoom based on distance
+      if (maxDiff > 0.5) setZoom(10);
+      else if (maxDiff > 0.1) setZoom(12);
+      else if (maxDiff > 0.05) setZoom(13);
+      else setZoom(14);
+    } else if (pickup) {
+      setMapCenter(pickup);
+      setZoom(14);
+    } else if (destination) {
+      setMapCenter(destination);
+      setZoom(14);
     }
   }, [pickup, destination]);
 
   return (
-    <div
-      ref={mapRef}
-      style={{ width: '100%', height: '400px', borderRadius: '8px' }}
-    />
+    <div style={{ width: '100%', height: '500px', borderRadius: '12px', overflow: 'hidden' }}>
+      <Map
+        center={mapCenter}
+        zoom={zoom}
+        mapId="e-hailing-map"
+        gestureHandling="greedy"
+        disableDefaultUI={false}
+      >
+        {pickup && (
+          <AdvancedMarker position={pickup}>
+            <Pin
+              background={'#22c55e'}
+              borderColor={'#16a34a'}
+              glyphColor={'#fff'}
+            >
+              <div style={{ fontSize: '16px', fontWeight: 'bold' }}>A</div>
+            </Pin>
+          </AdvancedMarker>
+        )}
+
+        {destination && (
+          <AdvancedMarker position={destination}>
+            <Pin
+              background={'#ef4444'}
+              borderColor={'#dc2626'}
+              glyphColor={'#fff'}
+            >
+              <div style={{ fontSize: '16px', fontWeight: 'bold' }}>B</div>
+            </Pin>
+          </AdvancedMarker>
+        )}
+      </Map>
+    </div>
   );
 }

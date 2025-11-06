@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Driver } from './entities/driver.entity';
@@ -10,10 +10,15 @@ export class DriversService {
     private readonly driversRepository: Repository<Driver>,
   ) {}
 
-  async updateStatus(driverId: string, isOnline: boolean): Promise<Driver> {
-    const driver = await this.driversRepository.findOne({ where: { id: driverId } });
+  async updateStatus(id: string, isOnline: boolean): Promise<Driver> {
+    const driver = await this.driversRepository.findOne({ where: { id } });
+
+    if (!driver) {
+      throw new NotFoundException(`Driver with id ${id} not found`);
+    }
+
     driver.isOnline = isOnline;
-    return this.driversRepository.save(driver);
+    return await this.driversRepository.save(driver);
   }
 
   async findAvailableDrivers(): Promise<Driver[]> {
