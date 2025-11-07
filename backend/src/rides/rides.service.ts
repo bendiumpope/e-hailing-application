@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Ride } from './entities/ride.entity';
 import { DriversService } from '../drivers/drivers.service';
+import { CreateRideDto } from './dto/create-ride.dto';
 
 @Injectable()
 export class RidesService {
@@ -12,16 +13,17 @@ export class RidesService {
     private readonly driversService: DriversService,
   ) {}
 
-  async createRide(rideData: Partial<Ride>): Promise<Ride> {
+  async createRide(rideData: CreateRideDto, user: any): Promise<Ride> {
     const availableDrivers = await this.driversService.findAvailableDrivers();
-    if (availableDrivers.length === 0) {
-      throw new Error('No available drivers');
-    }
 
-    const newRide = this.ridesRepository.create({
+    // For now, create a ride without assigning a driver if none are available
+    // TODO: Implement proper driver assignment logic
+    const rideToCreate = {
       ...rideData,
-      driver: availableDrivers[0],
-    });
+      riderId: user.id,
+    };
+
+    const newRide = this.ridesRepository.create(rideToCreate);
 
     return this.ridesRepository.save(newRide);
   }

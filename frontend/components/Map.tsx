@@ -1,7 +1,52 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Map, AdvancedMarker, Pin } from '@vis.gl/react-google-maps';
+import { useEffect, useState, useRef } from 'react';
+import { Map, AdvancedMarker, Pin, useMap } from '@vis.gl/react-google-maps';
+
+// Component to draw polyline between pickup and destination
+function RoutePolyline({
+  pickup,
+  destination
+}: {
+  pickup: { lat: number; lng: number };
+  destination: { lat: number; lng: number };
+}) {
+  const map = useMap();
+  const polylineRef = useRef<google.maps.Polyline | null>(null);
+
+  useEffect(() => {
+    if (!map || !pickup || !destination) return;
+
+    // Remove existing polyline
+    if (polylineRef.current) {
+      polylineRef.current.setMap(null);
+    }
+
+    // Create new polyline
+    const polyline = new google.maps.Polyline({
+      path: [
+        { lat: pickup.lat, lng: pickup.lng },
+        { lat: destination.lat, lng: destination.lng }
+      ],
+      geodesic: true,
+      strokeColor: '#0ea5e9',
+      strokeOpacity: 0.9,
+      strokeWeight: 4,
+    });
+
+    polyline.setMap(map);
+    polylineRef.current = polyline;
+
+    // Cleanup on unmount
+    return () => {
+      if (polylineRef.current) {
+        polylineRef.current.setMap(null);
+      }
+    };
+  }, [map, pickup, destination]);
+
+  return null;
+}
 
 export default function MapComponent({
   pickup,
@@ -43,36 +88,33 @@ export default function MapComponent({
   return (
     <div style={{ width: '100%', height: '500px', borderRadius: '12px', overflow: 'hidden' }}>
       <Map
-        center={mapCenter}
-        zoom={zoom}
-        mapId="e-hailing-map"
-        gestureHandling="greedy"
-        disableDefaultUI={false}
-      >
-        {pickup && (
-          <AdvancedMarker position={pickup}>
-            <Pin
-              background={'#22c55e'}
-              borderColor={'#16a34a'}
-              glyphColor={'#fff'}
-            >
-              <div style={{ fontSize: '16px', fontWeight: 'bold' }}>A</div>
-            </Pin>
-          </AdvancedMarker>
-        )}
+  center={mapCenter}
+  zoom={zoom}
+  mapId="e-hailing-map"
+  gestureHandling="greedy"
+  disableDefaultUI={false}
+>
+  {pickup && (
+    <AdvancedMarker position={pickup}>
+      <Pin background={'#22c55e'} borderColor={'#16a34a'} glyphColor={'#fff'}>
+        <div style={{ fontSize: '16px', fontWeight: 'bold' }}>A</div>
+      </Pin>
+    </AdvancedMarker>
+  )}
 
-        {destination && (
-          <AdvancedMarker position={destination}>
-            <Pin
-              background={'#ef4444'}
-              borderColor={'#dc2626'}
-              glyphColor={'#fff'}
-            >
-              <div style={{ fontSize: '16px', fontWeight: 'bold' }}>B</div>
-            </Pin>
-          </AdvancedMarker>
-        )}
-      </Map>
+  {destination && (
+    <AdvancedMarker position={destination}>
+      <Pin background={'#ef4444'} borderColor={'#dc2626'} glyphColor={'#fff'}>
+        <div style={{ fontSize: '16px', fontWeight: 'bold' }}>B</div>
+      </Pin>
+    </AdvancedMarker>
+  )}
+
+  {pickup && destination && (
+    <RoutePolyline pickup={pickup} destination={destination} />
+  )}
+</Map>
+
     </div>
   );
 }

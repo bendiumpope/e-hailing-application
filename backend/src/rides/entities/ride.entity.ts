@@ -31,12 +31,12 @@ export class Ride {
   })
   status: RideStatus;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { nullable: true })
   @JoinColumn()
-  rider: User;
+  rider?: User;
 
-  @Column()
-  riderId: string;
+  @Column({ nullable: true })
+  riderId?: string;
 
   @ManyToOne(() => Driver, { nullable: true })
   @JoinColumn()

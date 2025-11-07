@@ -1,7 +1,8 @@
 'use client';
 import { useState } from 'react';
-import { post } from '../services/api';
+import { createRide } from '../services/api';
 import LocationAutocomplete from './LocationAutocomplete';
+import { RideRequest } from '../types/ride';
 
 export default function RideRequestForm({
   onPickupChange,
@@ -28,34 +29,36 @@ export default function RideRequestForm({
     onDestinationChange(loc);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("pickup ", pickup)
-    console.log("destination ", destination)
+
     if (!pickup || !destination) {
       setError('Please select both pickup and destination.');
       return;
     }
-  
+
     setError('');
-  
+
     console.log('✅ Pickup Selected:', pickup);
     console.log('✅ Destination Selected:', destination);
-  
-    // Example: send to backend or calculate route
-    const rideData = {
-      pickupAddress: pickup.address,
-      pickupCoords: pickup.latLng,
-      destinationAddress: destination.address,
-      destinationCoords: destination.latLng,
+
+    // Prepare ride data for backend
+    const rideData: RideRequest = {
+      pickupLocation: pickup.latLng,
+      destination: destination.latLng,
+      fare: 15.00, // Default fare for now
     };
-  
+
     console.log('📦 Ride Data Ready To Send:', rideData);
-  
-    // Example API call
-    // post('/api/rides', rideData)
-    //   .then(response => console.log('🚀 Ride requested successfully', response))
-    //   .catch(err => console.error('❌ Failed to request ride:', err));
+
+    try {
+      const response = await createRide(rideData);
+      console.log('🚀 Ride requested successfully', response);
+      alert('Ride requested successfully!');
+    } catch (err: any) {
+      console.error('❌ Failed to request ride:', err);
+      setError('Failed to request ride. Please try again.');
+    }
   };
   
 
@@ -95,5 +98,6 @@ export default function RideRequestForm({
         {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
       </form>
     </div>
-  );
-}
+    );
+  }
+
