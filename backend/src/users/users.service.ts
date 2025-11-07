@@ -1,7 +1,7 @@
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './entities/user.entity';
+import { User, UserRole } from './entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 
@@ -26,10 +26,14 @@ export class UsersService {
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(createUserDto.password, salt);
 
-    const newUser = this.usersRepository.create({
-      ...createUserDto,
+    const userData: Partial<User> = {
+      name: createUserDto.name,
+      email: createUserDto.email,
       password: hashedPassword,
-    });
+      role: createUserDto.role || UserRole.RIDER,
+    };
+
+    const newUser = this.usersRepository.create(userData);
 
     return this.usersRepository.save(newUser);
   }
